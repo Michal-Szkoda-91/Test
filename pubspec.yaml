@@ -41,7 +41,7 @@ dependencies:
   better_skeleton: ^0.1.0
   device_info_plus: ^10.1.0
   flutter_animate: ^4.5.0
-  flutter_native_splash: 2.3.10
+  flutter_native_splash: 2.4.0
   flutter_riverpod: ^2.5.1
   flutter_secure_storage: ^9.2.2
   freezed_annotation: ^2.4.1
