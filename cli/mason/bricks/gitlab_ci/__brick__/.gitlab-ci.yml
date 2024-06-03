@@ -1,0 +1,213 @@
+variables:
+  {{#android}}FIREBASE_STAGING_ANDROID_APP_ID: "{{firebase_android_staging_appid}}"{{/android}}
+  {{#ios}}FIREBASE_STAGING_IOS_APP_ID: "{{firebase_ios_staging_appid}}"{{/ios}}
+  FIREBASE_TESTERS_GROUPS: "{{name}}" 
+  APP_PROJECT_NAME: "{{name}}"
+  NOTIFY_EMAIL_FROM: "" # <--- fill it with yours only if you use the notify step
+  NOTIFY_EMAILS: "{{notify_emails}}"
+
+stages:
+  - Setup
+  - Test
+  - Build
+  - Deploy
+  - Notify
+
+include:
+  - '/.gitlab/templates/flutter.yaml'
+  - '/.gitlab/templates/dropbox.yaml'
+  - '/.gitlab/templates/deploy.yaml'
+  - '/.gitlab/templates/mailgun.yaml'
+
+
+###########
+## SETUP ##
+###########
+setup:
+  stage: Setup
+  extends: .setup
+
+read_version:
+  stage: Setup
+  extends: .read-build-version
+
+## Automatic version increment
+bump_version:
+  stage: Bump version
+  extends: .bump-build-version
+  only:
+    - master
+    - main
+
+###########
+## TEST  ##
+###########
+test:
+  stage: Test
+  extends: .tests-stable
+
+############
+## BUILDS ##
+############
+## Staging
+{{#android}}
+build_android_staging:
+  stage: Build
+  extends:
+    - .build-android-profile
+  needs: [setup, test]
+  only:
+    - master
+    - main
+  variables:
+    FLAVOR: "staging"
+    PATH_TO_RUNNER: "lib/runners/main_staging.dart"
+{{/android}}
+{{#ios}}
+build_ios_staging:
+  stage: Build
+  needs: [setup, test]
+  extends:
+    - .build-ios-ipa
+  only:
+    - master
+    - main
+  variables:
+    FLAVOR: "staging"
+    METHOD: "ad-hoc"
+    PATH_TO_RUNNER: "lib/runners/main_staging.dart"
+{{/ios}}
+## Production
+{{#android}}
+build_android_production:
+  stage: Build
+  extends:
+    - .build-android-release
+  needs: [setup, test]
+  only:
+    - master
+    - main
+  variables:
+    FLAVOR: "production"
+    PATH_TO_RUNNER: "lib/runners/main_production.dart"
+  when: manual
+{{/android}}
+{{#ios}}
+build_ios_production:
+  stage: Build
+  needs: [setup, test]
+  extends:
+    - .build-ios-ipa
+  only:
+    - master
+    - main
+  variables:
+    FLAVOR: "production"
+    METHOD: "app-store"
+    PATH_TO_RUNNER: "lib/runners/main_production.dart"
+  when: manual
+{{/ios}}
+{{#firebase_distribution}}
+# ##############
+# ## FIREBASE ##
+# ##############
+{{#android}}
+deploy_android_firebase:
+  stage: Deploy
+  extends: .firebase-deploy
+  only:
+    - master
+    - main
+  dependencies:
+    - build_android_staging
+  variables:
+    PATH_TO_BINARY: "build/app/outputs/flutter-apk/app-staging-release.apk"
+    FIREBASE_APP_ID: "$FIREBASE_STAGING_ANDROID_APP_ID"
+    FIREBASE_TESTERS_GROUP: "$FIREBASE_TESTERS_GROUPS"
+    FIREBASE_CI_TOKEN: "$FIREBASE_TOKEN_PROJECT"
+  when: manual
+{{/android}}
+{{#ios}}
+deploy:ios:firebase:
+  stage: Deploy
+  extends: .firebase-deploy
+  only:
+    - master
+    - main
+  dependencies:
+    - build_ios_staging
+  variables:
+    PATH_TO_BINARY: "build/ios/ipa/app-staging.ipa"
+    FIREBASE_APP_ID: "$FIREBASE_STAGING_IOS_APP_ID"
+    FIREBASE_TESTERS_GROUP: "$FIREBASE_TESTERS_GROUPS"
+    FIREBASE_CI_TOKEN: "$FIREBASE_TOKEN_PROJECT"
+  when: manual
+{{/ios}}
+{{/firebase_distribution}}
+# ######################
+# ## DEPLOY ON STORES ##
+# ######################
+{{#ios}}
+deploy_ios_production_appstore:
+  stage: Deploy
+  extends: .deploy-ios-store
+  dependencies: [build_ios_production, read_version]
+  needs: [build_ios_production, read_version]
+  variables:
+    API_KEY: "TODO"
+    API_ISSUER: "TODO"
+  only:
+    - master
+    - main
+{{/ios}}
+{{#android}}
+deploy_android_production_appbundle:
+  stage: Deploy
+  extends: .gdrive
+  variables:
+    APP_FOLDER : "{{name}}"
+    FLAVOR : "prod"
+    PATH_TO_BINARY: "build/app/outputs/bundle/release/app-prod-release.aab"
+  needs: [build_android_production, read_version] 
+  dependencies: [build_android_production, read_version]
+  only:
+    - master
+    - main
+{{/android}}
+############
+## NOTIFY ##
+############
+{{#android}}
+deploy:android:production:notify:
+  stage: Notify
+  extends: .send_email
+  needs: [deploy_android_production_appbundle, read_version]
+  dependencies: [read_version]
+  variables: 
+    SUBJECT: "$APP_PROJECT_NAME: nouvelle release Android disponible"
+    MAILGUN_API_KEY: $MAILGUN_API_KEY
+    MAILGUN_DOMAIN: $MAILGUN_DOMAIN
+    FROM: $NOTIFY_EMAIL_FROM
+    HTML: "Un nouveau build Android est disponible pour l'application $APP_PROJECT_NAME :<br/>- App version: $APP_PROJECT_VERSION<br/>"
+    TO: $NOTIFY_EMAILS
+  only:
+    - master
+    - main
+{{/android}}
+{{#ios}}
+deploy:ios:production:notify:
+  stage: Notify
+  extends: .send_email
+  needs: [deploy_ios_production_appstore, read_version]
+  dependencies: [read_version]
+  variables: 
+    SUBJECT: '$APP_PROJECT_NAME: nouvelle release iOS disponible'
+    MAILGUN_API_KEY: $MAILGUN_API_KEY
+    MAILGUN_DOMAIN: $MAILGUN_DOMAIN
+    FROM: $NOTIFY_EMAIL_FROM
+    HTML: "Un nouveau build iOS est disponible pour l'application $APP_PROJECT_NAME.<br/>Il sera visible d'ici quelques minutes sur la page Apple store de configuration de votre application."
+    TO: $NOTIFY_EMAILS
+  only:
+    - master
+    - main
+{{/ios}}

@@ -1,0 +1,53 @@
+# Register bricks which can be consumed via the Mason CLI.
+# Run "mason get" to install all registered bricks.
+# To learn more, visit https://docs.brickhub.dev.
+bricks:
+  firebase_auth:
+    path: bricks/firebase_auth
+  http_auth:
+    path: bricks/http_auth
+  firebase_device_api:
+    path: bricks/firebase_device_api
+  http_device_api:
+    path: bricks/http_device_api
+  firebase_user_api:
+    path: bricks/firebase_user_api
+  http_user_api:
+    path: bricks/http_user_api
+  firebase_notifications_api:
+    path: bricks/firebase_notifications_api
+  http_notifications_api:
+    path: bricks/http_notifications_api
+  json_converters:
+    path: bricks/json_converters
+  firebase_storage_api:
+    path: bricks/firebase_storage_api
+  http_storage_api:
+    path: bricks/http_storage_api
+  module_notifications:
+    path: bricks/module_notifications
+  module_storage:
+    path: bricks/module_storage
+  web_compat:
+    path: bricks/web_compat
+  internationalization:
+    path: bricks/internationalization
+  main:
+    path: bricks/main
+  codemagic:
+    path: bricks/codemagic
+  router: 
+    path: bricks/router
+  onboarding:
+    path: 'bricks/onboarding'
+  camera:
+    path: 'bricks/camera'
+  # Bricks can be imported via version constraint from a registry.
+  # Uncomment the following line to import the "hello" brick from BrickHub.
+  # hello: 0.1.0+1
+  # Bricks can also be imported via remote git url.
+  # Uncomment the following lines to import the "widget" brick from git.
+  # widget:
+  #   git:
+  #     url: https://github.com/felangel/mason.git
+  #     path: bricks/widget

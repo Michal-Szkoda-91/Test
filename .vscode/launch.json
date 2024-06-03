@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Tests",
+            "type": "dart",
+            "request": "launch",
+            "program": "./test/"
+        },
+        {
+            "name": "Supabase - Development",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define=ENV=dev",
+                "--dart-define=BACKEND_URL=https://xampyqwtwsbkmvnwczqh.supabase.co",
+                "--dart-define=SUPABASE_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhbXB5cXd0d3Nia212bndjenFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc0MDc4NjQsImV4cCI6MjAzMjk4Mzg2NH0.ggLznEsa0xRk6VfcwexPSdzO1lU67oze1y4N4RV3-vY",
+            ]
+        },
+        {
+            "name": "HttpClient - Development",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define=ENV=dev",
+                "--dart-define=BACKEND_URL=https://us-central1-apparencekit-pro.cloudfunctions.net/app",
+            ]
+        },
+        {
+            "name": "Firebase - Development",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define=ENV=dev",
+                "--dart-define=BACKEND_URL=",
+            ]
+        }
+    ]
+}
